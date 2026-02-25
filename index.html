@@ -372,10 +372,22 @@
             </div>
 
             <h3 class="text-lg font-bold text-lux-dark mb-2 font-sans" id="alert-title">Sabar Dulu, Kak!</h3>
-            <p class="text-gray-600 text-sm mb-6 leading-relaxed" id="alert-message">
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed" id="alert-message">
                 Anda sudah melakukan pemesanan sebelumnya. Mohon tunggu respon Admin kami. Pemesanan ulang dapat
                 dilakukan 1 jam setelah pemesanan terakhir.
             </p>
+
+            <!-- Countdown Timer Container (Hidden by default) -->
+            <div id="countdown-container"
+                class="hidden bg-gray-50 border border-gray-100 rounded-xl p-3 mb-6 shadow-inner">
+                <p class="text-xs text-gray-500 font-medium mb-1 uppercase tracking-widest">Waktu Tunggu:</p>
+                <div
+                    class="flex items-center justify-center gap-2 text-2xl font-bold font-mono text-sage-dark drop-shadow-sm">
+                    <span id="cd-minutes">00</span>
+                    <span class="text-rose-400 -mt-1 animate-pulse">:</span>
+                    <span id="cd-seconds">00</span>
+                </div>
+            </div>
 
             <button onclick="closeAlertModal()"
                 class="w-full bg-lux-dark hover:bg-gray-800 text-white font-semibold py-3 rounded-xl transition shadow-md">
@@ -494,26 +506,84 @@
             }).join('');
         };
 
-        // Fungsi Cek Cooldown (1 Jam) berdasarkan Nama
-        const checkCooldown = (name) => {
-            const lastOrderData = localStorage.getItem('lastOrder_' + name.toLowerCase());
+        // Fungsi Cek Cooldown (1 Jam) berdasarkan Nama ATAU Alamat
+        // Mengembalikan { status: boolean, remainingMs: number (sisa waktu ms jika true) }
+        const checkCooldown = (name, address) => {
+            // Bersihkan format nama dan alamat (lowercase, hapus spasi berlebih) buat cek
+            const cleanName = name ? name.toLowerCase().trim() : "";
+            const cleanAddr = address ? address.toLowerCase().replace(/[\n\r]+/g, ' ').trim() : "";
 
-            if (lastOrderData) {
-                const lastTime = parseInt(lastOrderData);
+            const lastOrderNameData = cleanName ? localStorage.getItem('lastOrder_name_' + cleanName) : null;
+            const lastOrderAddrData = cleanAddr ? localStorage.getItem('lastOrder_addr_' + cleanAddr) : null;
+
+            let mostRecentTime = 0;
+
+            if (lastOrderNameData) {
+                mostRecentTime = Math.max(mostRecentTime, parseInt(lastOrderNameData));
+            }
+            if (lastOrderAddrData) {
+                mostRecentTime = Math.max(mostRecentTime, parseInt(lastOrderAddrData));
+            }
+
+            if (mostRecentTime > 0) {
                 const currentTime = new Date().getTime();
-                const diffHours = (currentTime - lastTime) / (1000 * 60 * 60);
+                const diffMs = currentTime - mostRecentTime;
+                const cooldownMs = 1000 * 60 * 60; // 1 Jam
 
-                if (diffHours < 1) {
-                    return true; // Masih dalam cooldown
+                if (diffMs < cooldownMs) {
+                    return { status: true, remainingMs: cooldownMs - diffMs }; // Masih cooldown
                 }
             }
-            return false; // Bisa pesan
+            return { status: false, remainingMs: 0 }; // Bisa pesan
         };
 
         // Custom JS Modal Functions
-        const showCustomAlert = (title, message) => {
+        let activeCountdownInterval = null; // Menyimpan ID interval agar bisa dibersihkan
+
+        const showCustomAlert = (title, message, remainingMs = null) => {
             document.getElementById('alert-title').innerText = title;
             document.getElementById('alert-message').innerText = message;
+
+            const countdownContainer = document.getElementById('countdown-container');
+            const minElem = document.getElementById('cd-minutes');
+            const secElem = document.getElementById('cd-seconds');
+
+            // Bersihkan interval yang lama jika ada
+            if (activeCountdownInterval) {
+                clearInterval(activeCountdownInterval);
+                activeCountdownInterval = null;
+            }
+
+            // Jika ada sisa waktu mundur, tampilkan dan jalankan timer
+            if (remainingMs != null && remainingMs > 0) {
+                countdownContainer.classList.remove('hidden');
+
+                let timeRemaining = Math.floor(remainingMs / 1000); // dalam detik
+
+                const updateDisplay = () => {
+                    const m = Math.floor(timeRemaining / 60);
+                    const s = timeRemaining % 60;
+
+                    minElem.innerText = m.toString().padStart(2, '0');
+                    secElem.innerText = s.toString().padStart(2, '0');
+
+                    if (timeRemaining <= 0) {
+                        clearInterval(activeCountdownInterval);
+                        countdownContainer.classList.add('hidden');
+                        document.getElementById('alert-title').innerText = "Waktu Tunggu Selesai!";
+                        document.getElementById('alert-message').innerText = "Silakan coba pesan kembali sekarang.";
+                    }
+                    timeRemaining--;
+                };
+
+                // Jalankan pertama kali, lalu setiap detik
+                updateDisplay();
+                activeCountdownInterval = setInterval(updateDisplay, 1000);
+
+            } else {
+                // Sembunyikan timer untuk peringatan biasa
+                countdownContainer.classList.add('hidden');
+            }
 
             const modal = document.getElementById('alert-modal');
             const content = document.getElementById('alert-content');
@@ -526,6 +596,12 @@
         };
 
         const closeAlertModal = () => {
+            // Matikan interval saat menutup modal agar tidak bocor memori
+            if (activeCountdownInterval) {
+                clearInterval(activeCountdownInterval);
+                activeCountdownInterval = null;
+            }
+
             const modal = document.getElementById('alert-modal');
             const content = document.getElementById('alert-content');
 
@@ -682,7 +758,7 @@
 
             // Format Pesan WA
             const textWa = `Halo *Pijat Ibu Yanti*, saya ingin melakukan pemesanan layanan pijat. Berikut detailnya:
-            
+
 *📝 Data Pemesan*
 • *Antrean:* ${queueID}
 • *Nama:* ${name}
@@ -700,24 +776,31 @@
 
 _Pemberitahuan: Pembayaran dapat dilakukan secara tunai/transfer SETELAH sesi pijat selesai._`;
 
-            // Cek apakah user sedang dalam masa cooldown 1 jam
-            if (checkCooldown(name)) {
+            // Cek apakah user sedang dalam masa cooldown 1 jam dari NAMA atau ALAMAT yang sama
+            const cooldownData = checkCooldown(name, address);
+
+            if (cooldownData.status) {
                 showCustomAlert(
-                    "Sabar Dulu, Kak!",
-                    `Maaf Kak ${name}, Anda sudah melakukan pemesanan sebelumnya. Mohon tunggu balasan atau respons dari Admin kami untuk menghindari tumpukan antrean.\n\nAnda dapat memesan kembali 1 jam setelah pesanan terakhir Anda.`
+                    "Antrean Masih Dibuka ✋",
+                    `Sistem mendeteksi pesanan terkait dari Akun/Alamat Anda dalam 1 jam terakhir. Mohon menunggu balasan Admin atau tunggu hingga waktu di bawah ini habis.`,
+                    cooldownData.remainingMs
                 );
                 return;
             }
 
             // MENCATAT BOOKING SLOT JAM & WAKTU KE LOCALSTORAGE
-            saveBookedSlot(date, selectedTime);
-            localStorage.setItem('lastOrder_' + name.toLowerCase(), new Date().getTime().toString());
+            saveBookedSlot(date, time); // Use 'time' not 'selectedTime'
+
+            const timestampNow = new Date().getTime().toString();
+            // Simpan jejak Nama & Alamat
+            if (name) localStorage.setItem('lastOrder_name_' + name.toLowerCase().trim(), timestampNow);
+            if (address) localStorage.setItem('lastOrder_addr_' + address.toLowerCase().replace(/[\n\r]+/g, ' ').trim(), timestampNow);
 
             // Render ulang jam jika user menutup langsung setelah kirim WA
             renderTimeSlots();
 
             // Buka Link WA
-            const urlWa = `https://wa.me/${6282326864835}?text=${encodeURIComponent(textWa)}`;
+            const urlWa = `https://wa.me/${ADMIN_WA_NUMBER}?text=${encodeURIComponent(textWa)}`;
             window.open(urlWa, '_blank');
             closeModal();
         };
