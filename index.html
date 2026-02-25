@@ -507,17 +507,24 @@
             }
 
             // Format Pesan WA
-            const textWa = `Halo *Pijat Ibu Yanti*, saya mau pesan:
+            const textWa = `Halo *Pijat Ibu Yanti*, saya ingin melakukan pemesanan layanan pijat. Berikut detailnya:
             
-*Antrean:* ${queueID}
-*Nama:* ${name}
-*Layanan:* ${currentService.name} (${durationText})
-*Jadwal:* ${date} jam ${time}
-*Alamat:* ${address}
+*📝 Data Pemesan*
+• *Antrean:* ${queueID}
+• *Nama:* ${name}
 
-*Total Bayar:* ${totalText}
+*💆‍♀️ Layanan yang Dipilih*
+• *Jenis Layanan:* ${currentService.name}
+• *Durasi:* ${durationText}
 
-_Pemberitahuan: Pembayaran dilakukan SETELAH melakukan sesi pijat selesai._`;
+*📅 Jadwal & Lokasi*
+• *Tanggal:* ${date}
+• *Waktu:* ${time} WIB
+• *Alamat:* ${address}
+
+*💰 Total Pembayaran:* ${totalText}
+
+_Pemberitahuan: Pembayaran dapat dilakukan secara tunai/transfer SETELAH sesi pijat selesai._`;
 
             // Buka Link WA
             const urlWa = `https://wa.me/${6282326864835}?text=${encodeURIComponent(textWa)}`;
