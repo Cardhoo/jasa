@@ -339,11 +339,11 @@
     </div>
 
 
-    <!-- GANTI NOMOR WHATSAPP DI SINI -->
+    <!-- GANTI NOMOR WHATSAPP -->
     <script>
-        // ISI NOMOR WHATSAPP KAMU DI BAWAH INI
-        // Format: Gunakan 62 di depan tanpa angka 0. Contoh: 6281234567890
-        const ADMIN_WA_NUMBER = "628xxxxxxxxxx";
+
+
+        const ADMIN_WA_NUMBER = "6282326864835";
 
         // Data Layanan
         const servicesData = [
@@ -389,6 +389,22 @@
         // State Modal
         let currentService = null;
         let queueID = "";
+
+        // Fungsi Cek Cooldown (1 Jam)
+        const checkCooldown = (name) => {
+            const lastOrderData = localStorage.getItem('lastOrder_' + name.toLowerCase());
+
+            if (lastOrderData) {
+                const lastTime = parseInt(lastOrderData);
+                const currentTime = new Date().getTime();
+                const diffHours = (currentTime - lastTime) / (1000 * 60 * 60);
+
+                if (diffHours < 1) {
+                    return true; // Masih dalam cooldown
+                }
+            }
+            return false; // Bisa pesan
+        };
 
         // Buka Modal
         const openModal = (serviceId) => {
@@ -526,6 +542,15 @@
 
 _Pemberitahuan: Pembayaran dapat dilakukan secara tunai/transfer SETELAH sesi pijat selesai._`;
 
+            // Cek apakah user sedang dalam masa cooldown 1 jam
+            if (checkCooldown(name)) {
+                alert(`Maaf Kak ${name}, Anda sudah melakukan pemesanan sebelumnya. Mohon tunggu balasan atau respon dari Admin kami. Anda dapat memesan kembali 1 jam setelah pesanan terakhir Anda untuk menghindari tumpukan antrean.`);
+                return;
+            }
+
+            // Simpan waktu pemesanan ke LocalStorage
+            localStorage.setItem('lastOrder_' + name.toLowerCase(), new Date().getTime().toString());
+
             // Buka Link WA
             const urlWa = `https://wa.me/${6282326864835}?text=${encodeURIComponent(textWa)}`;
             window.open(urlWa, '_blank');
@@ -616,6 +641,23 @@ _Pemberitahuan: Pembayaran dapat dilakukan secara tunai/transfer SETELAH sesi pi
         window.addEventListener('DOMContentLoaded', () => {
             renderServices();
             startTextCarousel(); // Start animations
+
+            // ANTI INSPECT & DEV TOOLS DISABLER
+            document.addEventListener('contextmenu', event => event.preventDefault());
+
+            document.onkeydown = function (e) {
+                // Disable F12
+                if (e.key === "F12") {
+                    return false;
+                }
+                // Disable Ctrl+Shift+I (Chrome) / Ctrl+Shift+J (Console) / Ctrl+U (Source)
+                if (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "J" || e.key === "j" || e.key === "C" || e.key === "c")) {
+                    return false;
+                }
+                if (e.ctrlKey && (e.key === "U" || e.key === "u")) {
+                    return false;
+                }
+            };
         });
 
     </script>
