@@ -374,7 +374,7 @@
             <h3 class="text-lg font-bold text-lux-dark mb-2 font-sans" id="alert-title">Sabar Dulu, Kak!</h3>
             <p class="text-gray-600 text-sm mb-4 leading-relaxed" id="alert-message">
                 Anda sudah melakukan pemesanan sebelumnya. Mohon tunggu respon Admin kami. Pemesanan ulang dapat
-                dilakukan 1 jam setelah pemesanan terakhir.
+                dilakukan 10 menit setelah pemesanan terakhir.
             </p>
 
             <!-- Countdown Timer Container (Hidden by default) -->
@@ -506,7 +506,7 @@
             }).join('');
         };
 
-        // Fungsi Cek Cooldown (1 Jam) berdasarkan Nama ATAU Alamat
+        // Memeriksa Cooldown (10 Menit) berdasarkan Nama ATAU Alamat
         // Mengembalikan { status: boolean, remainingMs: number (sisa waktu ms jika true) }
         const checkCooldown = (name, address) => {
             // Bersihkan format nama dan alamat (lowercase, hapus spasi berlebih) buat cek
@@ -528,7 +528,7 @@
             if (mostRecentTime > 0) {
                 const currentTime = new Date().getTime();
                 const diffMs = currentTime - mostRecentTime;
-                const cooldownMs = 1000 * 60 * 60; // 1 Jam
+                const cooldownMs = 1000 * 60 * 10; // 10 Menit
 
                 if (diffMs < cooldownMs) {
                     return { status: true, remainingMs: cooldownMs - diffMs }; // Masih cooldown
@@ -776,13 +776,13 @@
 
 _Pemberitahuan: Pembayaran dapat dilakukan secara tunai/transfer SETELAH sesi pijat selesai._`;
 
-            // Cek apakah user sedang dalam masa cooldown 1 jam dari NAMA atau ALAMAT yang sama
+            // Cek apakah user sedang dalam masa cooldown 10 Menit dari NAMA atau ALAMAT yang sama
             const cooldownData = checkCooldown(name, address);
 
             if (cooldownData.status) {
                 showCustomAlert(
                     "Antrean Masih Dibuka ✋",
-                    `Sistem mendeteksi pesanan terkait dari Akun/Alamat Anda dalam 1 jam terakhir. Mohon menunggu balasan Admin atau tunggu hingga waktu di bawah ini habis.`,
+                    `Sistem mendeteksi pesanan terkait dari Akun/Alamat Anda dalam 10 menit terakhir. Mohon menunggu balasan Admin atau tunggu hingga waktu di bawah ini habis.`,
                     cooldownData.remainingMs
                 );
                 return;
