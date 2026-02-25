@@ -252,30 +252,31 @@
 
                     <!-- Step 1: Durasi -->
                     <div id="duration-section">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Langkah 1: Pilih Durasi</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Langkah 1: Pilih Durasi Tambahan
+                            (Opsional)</label>
                         <div class="grid grid-cols-3 gap-2">
                             <label class="cursor-pointer">
-                                <input type="radio" name="duration" value="1 Jam" class="peer hidden" checked
+                                <input type="radio" name="duration" value="Bawaan" class="peer hidden" checked
                                     onchange="calculateTotal()">
                                 <div
                                     class="text-center py-2 px-1 rounded-xl border-2 border-gray-100 peer-checked:border-sage peer-checked:bg-sage/10 hover:border-sage-light transition text-xs font-semibold text-gray-500 peer-checked:text-sage-dark shadow-sm">
-                                    1 Jam<br><span class="text-[10px] font-normal">Normal</span>
+                                    Sesuai Paket<br><span class="text-[10px] font-normal">Normal</span>
                                 </div>
                             </label>
                             <label class="cursor-pointer">
-                                <input type="radio" name="duration" value="1.5 Jam" class="peer hidden"
+                                <input type="radio" name="duration" value="+ 30 Menit" class="peer hidden"
                                     onchange="calculateTotal()">
                                 <div
                                     class="text-center py-2 px-1 rounded-xl border-2 border-gray-100 peer-checked:border-sage peer-checked:bg-sage/10 hover:border-sage-light transition text-xs font-semibold text-gray-500 peer-checked:text-sage-dark shadow-sm">
-                                    1.5 Jam<br><span class="text-[10px] font-normal">+20rb</span>
+                                    + 30 Menit<br><span class="text-[10px] font-normal">+ Rp 49.000</span>
                                 </div>
                             </label>
                             <label class="cursor-pointer">
-                                <input type="radio" name="duration" value="2 Jam" class="peer hidden"
+                                <input type="radio" name="duration" value="+ 60 Menit" class="peer hidden"
                                     onchange="calculateTotal()">
                                 <div
                                     class="text-center py-2 px-1 rounded-xl border-2 border-gray-100 peer-checked:border-sage peer-checked:bg-sage/10 hover:border-sage-light transition text-xs font-semibold text-gray-500 peer-checked:text-sage-dark shadow-sm">
-                                    2 Jam<br><span class="text-[10px] font-normal">+40rb</span>
+                                    + 60 Menit<br><span class="text-[10px] font-normal">+ Rp 89.000</span>
                                 </div>
                             </label>
                         </div>
@@ -293,11 +294,26 @@
                                     class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage focus:bg-white transition shadow-inner">
                             </div>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <input type="date" id="cust-date" required
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage focus:bg-white transition text-gray-600 shadow-inner">
-                                <input type="time" id="cust-time" required
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage focus:bg-white transition text-gray-600 shadow-inner">
+                            <div class="grid grid-cols-1 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Pilih Tanggal</label>
+                                    <input type="date" id="cust-date" required onchange="renderTimeSlots()"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage focus:bg-white transition text-gray-600 shadow-inner">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">Pilih Jam</label>
+
+                                    <!-- Hidden Input to store the selected time -->
+                                    <input type="hidden" id="cust-time" required>
+
+                                    <!-- Time Slots Grid -->
+                                    <div class="grid grid-cols-4 gap-2" id="time-slots-container">
+                                        <!-- Javascript will inject time slots here -->
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-2 italic">*Jam abu-abu sudah dibooking
+                                        (penuh) untuk tanggal ini.</p>
+                                </div>
                             </div>
 
                             <div>
@@ -375,16 +391,17 @@
 
         const ADMIN_WA_NUMBER = "6282326864835";
 
-        // Data Layanan
+        // Data Layanan berserta Harga Psikologis (S3 Marketing)
+        // 200rb -> 199.000, 250rb -> 249.000, 150rb -> 149.000, 170rb -> 169.000
         const servicesData = [
-            { id: 1, name: "Pijat Full Body", ext: "(2 Jam)", price: 200000, icon: "fa-hands" },
-            { id: 2, name: "Pijat Lulur", ext: "(2 Jam)", price: 250000, icon: "fa-leaf" },
-            { id: 3, name: "Totok Wajah", ext: "", price: 200000, icon: "fa-face-smile" },
-            { id: 4, name: "Susah Tidur", ext: "(1.5 Jam)", price: 150000, icon: "fa-bed" },
-            { id: 5, name: "Tangan/Kaki Susah Gerak", ext: "(2 Jam)", price: 250000, icon: "fa-person-walking" },
-            { id: 6, name: "Keseleo", ext: "", price: 200000, icon: "fa-kit-medical" },
-            { id: 7, name: "Anak / Ibu Hamil", ext: "(1.5 Jam)", price: 170000, icon: "fa-baby" },
-            { id: 8, name: "Paket Stroke (Mingguan)", ext: "", price: 0, isChatAdmin: true, icon: "fa-heart-pulse" }
+            { id: 1, name: "Pijat Full Body", ext: "(2 Jam)", price: 199000, icon: "fa-hands" },
+            { id: 2, name: "Pijat Lulur", ext: "(2 Jam)", price: 249000, icon: "fa-leaf" },
+            { id: 3, name: "Totok Wajah", ext: "(1.5 Jam)", price: 199000, icon: "fa-face-smile" },
+            { id: 4, name: "Susah Tidur (Insomnia)", ext: "(1.5 Jam)", price: 149000, icon: "fa-bed" },
+            { id: 5, name: "Tangan/Kaki Susah Gerak", ext: "(2 Jam)", price: 249000, icon: "fa-person-walking" },
+            { id: 6, name: "Pijat Keseleo / Otot Tegang", ext: "(1.5 Jam)", price: 199000, icon: "fa-kit-medical" },
+            { id: 7, name: "Pijat Anak / Ibu Hamil", ext: "(1.5 Jam)", price: 169000, icon: "fa-baby" },
+            { id: 8, name: "Paket Stroke (Mingguan)", ext: "(Sesuai Perawatan)", price: 0, isChatAdmin: true, icon: "fa-heart-pulse" }
         ];
 
         // Format Rupiah
@@ -420,7 +437,64 @@
         let currentService = null;
         let queueID = "";
 
-        // Fungsi Cek Cooldown (1 Jam)
+        // Data Jam Operasional (08:00 - 20:00)
+        const operationalHours = [
+            "08:00", "09:00", "10:00", "11:00", "12:00", "13:00",
+            "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00"
+        ];
+
+        // Mendapatkan Daftar Jam Sibuk dari LocalStorage berdasarkan tanggal
+        const getBookedSlots = (date) => {
+            const bookedData = localStorage.getItem('bookedSlots_' + date);
+            return bookedData ? JSON.parse(bookedData) : [];
+        };
+
+        // Menyimpan Jadwal Booking ke LocalStorage
+        const saveBookedSlot = (date, time) => {
+            const bookedSlots = getBookedSlots(date);
+            if (!bookedSlots.includes(time)) {
+                bookedSlots.push(time);
+                localStorage.setItem('bookedSlots_' + date, JSON.stringify(bookedSlots));
+            }
+        };
+
+        // Render Sistem Jam (Memblokir yang sudah penuh)
+        const renderTimeSlots = () => {
+            const container = document.getElementById('time-slots-container');
+            const selectedDate = document.getElementById('cust-date').value;
+            const timeInputHidden = document.getElementById('cust-time');
+
+            // Reset pilihan jam jika tanggal diganti
+            timeInputHidden.value = "";
+
+            if (!selectedDate) {
+                container.innerHTML = `<div class="col-span-4 text-xs text-gray-400 text-center py-2">Silakan pilih tanggal terlebih dahulu</div>`;
+                return;
+            }
+
+            const bookedSlots = getBookedSlots(selectedDate);
+
+            container.innerHTML = operationalHours.map(time => {
+                const isBooked = bookedSlots.includes(time);
+
+                if (isBooked) {
+                    return `
+                    <div class="text-center py-2 px-1 rounded-lg border border-gray-200 bg-gray-100 text-gray-400 text-xs font-medium cursor-not-allowed opacity-60">
+                        ${time} <i class="fa-solid fa-lock text-[8px] ml-1"></i>
+                    </div>`;
+                } else {
+                    return `
+                    <label class="cursor-pointer">
+                        <input type="radio" name="time_slot" value="${time}" class="peer hidden" onchange="document.getElementById('cust-time').value = this.value">
+                        <div class="text-center py-2 px-1 rounded-lg border border-gray-200 bg-white hover:bg-sage/10 hover:border-sage-light peer-checked:bg-sage peer-checked:text-white peer-checked:border-sage peer-checked:shadow-md transition-all text-xs font-semibold text-gray-600">
+                            ${time}
+                        </div>
+                    </label>`;
+                }
+            }).join('');
+        };
+
+        // Fungsi Cek Cooldown (1 Jam) berdasarkan Nama
         const checkCooldown = (name) => {
             const lastOrderData = localStorage.getItem('lastOrder_' + name.toLowerCase());
 
@@ -477,24 +551,37 @@
             document.getElementById('modal-queue-id').innerText = `Antrean: ${queueID}`;
             document.getElementById('modal-service-name').innerText = currentService.name;
 
-            // Set harga base
+            // Tampilkan harga modal awal (Base Price)
             if (currentService.isChatAdmin) {
-                document.getElementById('modal-base-price').innerText = "Hubungi Admin";
-                document.getElementById('duration-section').style.display = 'none'; // Sembunyikan durasi untuk paket khusus
+                document.getElementById('modal-base-price').innerText = "Konsultasi Admin";
+                document.getElementById('duration-section').style.display = 'none';
             } else {
                 document.getElementById('modal-base-price').innerText = formatRupiah(currentService.price);
-                document.getElementById('duration-section').style.display = 'block'; // Tampilkan form durasi
+                document.getElementById('duration-section').style.display = 'block';
             }
 
-            // Reset Form & Default ke 1 Jam
+            // Reset Form & Default ke "Sesuai Paket"
             document.getElementById('booking-form').reset();
-            document.querySelector('input[name="duration"][value="1 Jam"]').checked = true;
+            document.querySelector('input[name="duration"][value="Bawaan"]').checked = true;
 
             // Update Total
             calculateTotal();
 
-            // Set default tanggal hari ini
-            document.getElementById('cust-date').valueAsDate = new Date();
+            // Set default tanggal hari ini & Render Jam
+            const dateInput = document.getElementById('cust-date');
+
+            // Format tanggal hari ini jadi YYYY-MM-DD agar masuk ke input type date
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+
+            // Batasi agar tidak bisa milih tanggal mundur
+            dateInput.min = `${yyyy}-${mm}-${dd}`;
+
+            document.getElementById('cust-time').value = ""; // Reset hidden time val
+            renderTimeSlots();
 
             // Animasi & Tampilkan Modal
             const modal = document.getElementById('booking-modal');
@@ -521,12 +608,12 @@
             }, 300);
         };
 
-        // Hitung Total (Base Price + Durasi)
+        // Hitung Total (Base Price + Tambahan Durasi)
         const calculateTotal = () => {
             if (!currentService) return;
 
             const durationInputs = document.getElementsByName('duration');
-            let selectedDuration = "1 Jam";
+            let selectedDuration = "Bawaan";
             let additionalCost = 0;
 
             for (let radio of durationInputs) {
@@ -536,13 +623,14 @@
                 }
             }
 
-            if (selectedDuration === "1.5 Jam") additionalCost = 20000;
-            if (selectedDuration === "2 Jam") additionalCost = 40000;
+            // Menerapkan S3 Marketing: Harga psikologis diskon untuk extra time
+            if (selectedDuration === "+ 30 Menit") additionalCost = 49000;
+            if (selectedDuration === "+ 60 Menit") additionalCost = 89000;
 
             const totalPriceId = document.getElementById('modal-total-price');
 
             if (currentService.isChatAdmin) {
-                totalPriceId.innerText = "Sesuai Kesepakatan";
+                totalPriceId.innerText = "Harga Diskusi";
             } else {
                 totalPriceId.innerText = formatRupiah(currentService.price + additionalCost);
             }
@@ -557,15 +645,19 @@
 
             // Validasi Input
             if (!name || !date || !time || !address) {
-                alert("Mohon lengkapi semua data diri, jadwal, dan alamat/shareloc.");
+                if (!time) {
+                    showCustomAlert("Pilih Jam Dulu", "Mohon pilih salah satu Jam Kedatangan (yang tidak terkunci berwarna abu-abu) sebelum mengkonfirmasi pesanan Anda.");
+                } else {
+                    showCustomAlert("Form Belum Lengkap", "Mohon lengkapi semua data diri, pilih tanggal, pilih jam, dan isi alamat/shareloc Anda.");
+                }
                 return;
             }
 
             // Cari Durasi & Total
             const durationInputs = document.getElementsByName('duration');
-            let selectedDuration = "1 Jam";
+            let selectedExtendDuration = "Bawaan";
             for (let radio of durationInputs) {
-                if (radio.checked) { selectedDuration = radio.value; break; }
+                if (radio.checked) { selectedExtendDuration = radio.value; break; }
             }
 
             let totalText = "";
@@ -573,13 +665,19 @@
 
             if (currentService.isChatAdmin) {
                 totalText = "Menunggu info admin";
-                durationText = "Paket Mingguan";
+                durationText = "Paket Khusus (Mingguan)";
             } else {
                 let cost = currentService.price;
-                if (selectedDuration === "1.5 Jam") cost += 20000;
-                if (selectedDuration === "2 Jam") cost += 40000;
+                if (selectedExtendDuration === "+ 30 Menit") cost += 49000;
+                if (selectedExtendDuration === "+ 60 Menit") cost += 89000;
                 totalText = formatRupiah(cost);
-                durationText = selectedDuration;
+
+                // Format gabungan durasi bawaan layanan + durasi tambahan (jika ada)
+                if (selectedExtendDuration === "Bawaan") {
+                    durationText = currentService.ext;
+                } else {
+                    durationText = `${currentService.ext} ditambah ${selectedExtendDuration}`;
+                }
             }
 
             // Format Pesan WA
@@ -611,8 +709,12 @@ _Pemberitahuan: Pembayaran dapat dilakukan secara tunai/transfer SETELAH sesi pi
                 return;
             }
 
-            // Simpan waktu pemesanan ke LocalStorage
+            // MENCATAT BOOKING SLOT JAM & WAKTU KE LOCALSTORAGE
+            saveBookedSlot(date, selectedTime);
             localStorage.setItem('lastOrder_' + name.toLowerCase(), new Date().getTime().toString());
+
+            // Render ulang jam jika user menutup langsung setelah kirim WA
+            renderTimeSlots();
 
             // Buka Link WA
             const urlWa = `https://wa.me/${6282326864835}?text=${encodeURIComponent(textWa)}`;
